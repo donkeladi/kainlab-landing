@@ -10,8 +10,9 @@ Tiada proses build: fail ini terus boleh dihoskan.
 - `assets/`: logo, maskot, poster dan design (WebP)
 - `robots.txt`, `sitemap.xml`: SEO
 
-## Sebelum live
-Gantikan `https://www.kainlab.my/` dengan alamat sebenar dalam `index.html`, `sitemap.xml` dan `robots.txt`.
+## Alamat laman
+URL SEO (canonical, Open Graph, sitemap, robots, schema) menggunakan `https://donkeladi.github.io/kainlab-landing/`.
+Apabila domain tetap digunakan, gantikan alamat ini dalam `index.html`, `sitemap.xml` dan `robots.txt`.
 
 ## Jalankan setempat
 ```
