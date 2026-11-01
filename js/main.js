@@ -262,4 +262,65 @@
     }
     timer = setTimeout(show, 5000);
   })();
+
+  /* theme music: tries to autoplay; browsers usually block sound until the first tap/click,
+     so it then starts on the first interaction. The choice to mute is remembered. */
+  (function () {
+    var au = $('#bgm'), btn = $('#bgm-btn'), lbl = $('#bgm-t');
+    if (!au || !btn) return;
+    var VOL = 0.4, fade, wanted = true, playing = false;
+    try { if (localStorage.getItem('kb-music') === 'off') wanted = false; } catch (_) {}
+    btn.hidden = false;
+    au.volume = 0;
+
+    function ui() {
+      btn.setAttribute('aria-pressed', String(playing));
+      btn.classList.toggle('on', playing);
+      btn.setAttribute('aria-label', playing ? 'Senyapkan lagu tema' : 'Mainkan lagu tema Kainlab');
+      lbl.textContent = playing ? 'Lagu tema' : (wanted ? 'Ketik untuk lagu tema' : 'Lagu tema');
+      btn.classList.toggle('hint', !playing && wanted);
+    }
+    function fadeTo(v, ms, done) {
+      clearInterval(fade);
+      var from = au.volume, t0 = Date.now();
+      fade = setInterval(function () {
+        var k = Math.min(1, (Date.now() - t0) / ms);
+        au.volume = Math.max(0, Math.min(1, from + (v - from) * k));
+        if (k >= 1) { clearInterval(fade); if (done) done(); }
+      }, 40);
+    }
+    function start() {
+      var p = au.play();
+      var ok = function () { au.muted = false; playing = true; ui(); fadeTo(VOL, 1500); };
+      if (p && p.then) p.then(ok, function () { playing = false; ui(); }); else ok();
+    }
+    function stop(remember) {
+      playing = false; ui();
+      fadeTo(0, 400, function () { au.pause(); });
+      if (remember) { wanted = false; try { localStorage.setItem('kb-music', 'off'); } catch (_) {} ui(); }
+    }
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (playing) stop(true);
+      else { wanted = true; try { localStorage.removeItem('kb-music'); } catch (_) {} start(); }
+    });
+    /* first interaction unlocks sound */
+    var unlock = function (e) {
+      if (!wanted || playing || (e.target && e.target.closest && e.target.closest('#bgm-btn'))) return;
+      start();
+    };
+    ['pointerdown', 'keydown', 'touchend'].forEach(function (ev) {
+      document.addEventListener(ev, function once(e) {
+        unlock(e);
+        if (playing || !wanted) document.removeEventListener(ev, once, true);
+      }, true);
+    });
+    /* pause when the tab is hidden */
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden) { if (playing) au.pause(); }
+      else if (playing) au.play().catch(function () {});
+    });
+    ui();
+    if (wanted) start();   /* attempt autoplay with sound; silently falls back to first tap */
+  })();
 })();
